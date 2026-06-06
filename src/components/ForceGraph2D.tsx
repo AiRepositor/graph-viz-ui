@@ -27,6 +27,29 @@ const TYPE_COLORS: Record<string, string> = {
   cron: '#2d4a6a', plugin: '#6a2d6a', tool: '#2d6a6a', session: '#4a4a6a',
 };
 
+// Domain horizontal band positions (Y coordinate in graph space)
+const DOMAIN_Y_BANDS: Record<string, number> = {
+  repo: -180,    // top
+  tool: -60,
+  skill: 60,     // middle
+  plugin: 60,
+  profile: 180,
+  config: 180,   // bottom
+  cron: 180,
+  session: 180,
+};
+
+const BAND_COLORS: Record<string, string> = {
+  repo: '#58a6ff', skill: '#3fb950', profile: '#d29922', config: '#e3b341',
+  cron: '#56d4dd', plugin: '#a882ff', tool: '#db61a2', session: '#79c0ff',
+};
+
+const BAND_LABELS: Record<string, string> = {
+  repo: '📦 Repos', skill: '🧠 Skills', profile: '👤 Profiles',
+  config: '⚙️ Config', cron: '⏱ Cron', plugin: '🔌 Plugins',
+  tool: '🔧 Tools', session: '📋 Sessions',
+};
+
 export default function ForceGraph2D({ nodes, links, selectedId, collapsedClusters, explodedId,
   onNodeClick, onBackgroundClick, onClusterToggle, onExplodeToggle }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -73,6 +96,10 @@ export default function ForceGraph2D({ nodes, links, selectedId, collapsedCluste
         .force('charge', d3.forceManyBody().strength(-250))
         .force('center', d3.forceCenter(0, 0))
         .force('collision', d3.forceCollide().radius((d: any) => Math.max(8, (d.val || 1) * 2.5)))
+        // Domain bands: pull each node toward its domain's Y row
+        .force('y', d3.forceY((d: any) => DOMAIN_Y_BANDS[d.type] || 0).strength(0.35))
+        // Gentle X centering within each band
+        .force('x', d3.forceX(0).strength(0.05))
         .alphaDecay(0.015);
       simRef.current = sim;
       initializedRef.current = true;
@@ -210,6 +237,42 @@ export default function ForceGraph2D({ nodes, links, selectedId, collapsedCluste
       const hovered = hoverRef.current;
 
       const nodeMap = new Map(nds.map((n: any) => [n.id, n]));
+
+      // ── Draw domain bands (horizontal strips by type) ──
+      const activeBands = new Map<string, any[]>();
+      for (const n of nds) {
+        if (n.x == null || Math.abs(n.x) > 5000) continue;
+        const t = n.type || 'other';
+        if (!activeBands.has(t)) activeBands.set(t, []);
+        activeBands.get(t)!.push(n);
+      }
+      // Collect visible Y positions per band
+      for (const [type, members] of activeBands) {
+        const targetY = DOMAIN_Y_BANDS[type];
+        if (targetY == null) continue;
+        const xs = members.map((n: any) => n.x).filter((x: number) => x != null);
+        if (!xs.length) continue;
+        const minX = Math.min(...xs) - 80;
+        const maxX = Math.max(...xs) + 80;
+        const bandWidth = maxX - minX;
+        const bandColor = BAND_COLORS[type] || '#484f58';
+
+        // Semi-transparent band background
+        ctx.beginPath();
+        ctx.rect(minX - 20, targetY - 28, bandWidth + 40, 56);
+        ctx.fillStyle = bandColor + '0D';
+        ctx.fill();
+        ctx.strokeStyle = bandColor + '20';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // Band label on the left side
+        ctx.font = 'bold 10px -apple-system, sans-serif';
+        ctx.fillStyle = bandColor + '88';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(BAND_LABELS[type] || type, minX - 16, targetY);
+      }
 
       // ── Build cluster groups (only from visible, non-collapsed nodes) ──
       const clusterGroups = new Map<string, any[]>();

@@ -52,6 +52,8 @@ export default function GraphVizApp() {
   const [filterTypes, setFilterTypes] = useState<Set<string>>(new Set());
   const [filterClusters, setFilterClusters] = useState<Set<string>>(new Set());
   const [panelOpen, setPanelOpen] = useState(true);
+  const [collapsedClusters, setCollapsedClusters] = useState<Set<string>>(new Set());
+  const [explodedNodeId, setExplodedNodeId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dataKeyRef = useRef(0); // force remount counter for graph
 
@@ -148,6 +150,8 @@ export default function GraphVizApp() {
     setFilterTypes(data?.stats.types['repo'] ? new Set(['repo']) : new Set(Object.keys(data?.stats.types || {})));
     setFilterClusters(new Set());
     setSelectedNode(null);
+    setCollapsedClusters(new Set());
+    setExplodedNodeId(null);
     dataKeyRef.current++;
   }, [data]);
 
@@ -221,11 +225,24 @@ export default function GraphVizApp() {
               nodes={graphData.nodes}
               links={graphData.links}
               selectedId={selectedNode?.id || null}
+              collapsedClusters={collapsedClusters}
+              explodedId={explodedNodeId}
               onNodeClick={(node: any) => {
                 const n = data.nodes.find(n => n.id === node.id);
                 setSelectedNode(n || null);
               }}
               onBackgroundClick={() => setSelectedNode(null)}
+              onClusterToggle={(cluster: string) => {
+                setCollapsedClusters(prev => {
+                  const next = new Set(prev);
+                  if (next.has(cluster)) next.delete(cluster); else next.add(cluster);
+                  return next;
+                });
+              }}
+              onExplodeToggle={(nodeId: string | null) => {
+                setExplodedNodeId(nodeId);
+                if (nodeId) setSelectedNode(null);
+              }}
             />
           ) : (
             <div className="empty-state" style={{ height: '100%' }}>
@@ -234,7 +251,7 @@ export default function GraphVizApp() {
               <button className="btn" onClick={resetFilters} style={{ marginTop: 8 }}>Reset Filters</button>
             </div>
           )}
-          <div className="instructions">Drag to pan · Scroll to zoom · Click to inspect</div>
+          <div className="instructions">Click to inspect · Double-click to explode · Click cluster bg to collapse · Drag/zoom</div>
         </div>
 
         {/* Side panel */}

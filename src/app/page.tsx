@@ -11,10 +11,16 @@ interface GraphEdge { source: string; target: string; kind: string; label: strin
 interface GraphData { title: string; stats: { total_nodes: number; total_edges: number; total_clusters: number; types: Record<string, number> }; nodes: GraphNode[]; edges: GraphEdge[]; clusters: { id: string; name: string; color: string }[]; }
 
 const TYPE_COLORS: Record<string, string> = {
-  repo: '#0f3460', skill: '#2d6a4f', profile: '#6a2d2d', config: '#6a6a2d',
-  cron: '#2d4a6a', plugin: '#6a2d6a', tool: '#2d6a6a', session: '#4a4a6a',
+  repo: '#58a6ff', skill: '#3fb950', profile: '#d29922', config: '#e3b341',
+  cron: '#56d4dd', plugin: '#a882ff', tool: '#db61a2', session: '#79c0ff',
+};
+const TYPE_DOMAIN_NAMES: Record<string, string> = {
+  repo: '📦 Repos', skill: '🧠 Skills', profile: '👤 Profiles',
+  config: '⚙️ Config', cron: '⏱ Cron', plugin: '🔌 Plugins',
+  tool: '🔧 Tools', session: '📋 Sessions',
 };
 const TYPE_DEFAULT = '#484f58';
+const DOMAIN_ORDER = ['repo', 'skill', 'config', 'profile', 'cron', 'plugin', 'tool', 'session'];
 
 // ── Debounce hook ──
 function useDebounce<T>(value: T, delay: number): T {
@@ -67,12 +73,8 @@ export default function GraphVizApp() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const json: GraphData = await resp.json();
         setData(json);
-        // Default: repos only
-        if (json.stats.types['repo']) {
-          setFilterTypes(new Set(['repo']));
-        } else {
-          setFilterTypes(new Set(Object.keys(json.stats.types)));
-        }
+        // Default: show ALL types (full deep view)
+        setFilterTypes(new Set(Object.keys(json.stats.types)));
       } catch (e: any) {
         setError(e.message || 'Failed to load graph data');
       } finally {
@@ -108,10 +110,11 @@ export default function GraphVizApp() {
     return {
       nodes: parsed.nodes.map((n: GraphNode) => ({
         id: n.id, name: n.name,
-        val: n.type === 'skill' ? (n.count ? 6 + Math.min(n.count, 30) * 0.5 : 8)
-           : n.type === 'repo' ? 12
-           : n.type === 'config' ? 8 : 6,
-        color: data?.clusters.find(c => c.name === n.cluster)?.color || TYPE_COLORS[n.type] || TYPE_DEFAULT,
+        val: n.type === 'repo' ? 16
+           : n.type === 'skill' ? 8 + (n.count ? Math.min(n.count, 30) * 0.4 : 0)
+           : n.type === 'config' ? 7 : 6,
+        // Primary color = type domain, with subtle cluster tint
+        color: TYPE_COLORS[n.type] || TYPE_DEFAULT,
         type: n.type, cluster: n.cluster || '',
       })),
       links: parsed.edges.map((e: GraphEdge) => ({
@@ -147,7 +150,7 @@ export default function GraphVizApp() {
 
   const resetFilters = useCallback(() => {
     setSearchQuery('');
-    setFilterTypes(data?.stats.types['repo'] ? new Set(['repo']) : new Set(Object.keys(data?.stats.types || {})));
+    setFilterTypes(new Set(Object.keys(data?.stats.types || {})));
     setFilterClusters(new Set());
     setSelectedNode(null);
     setCollapsedClusters(new Set());
@@ -164,7 +167,7 @@ export default function GraphVizApp() {
         const text = await file.text();
         const json = JSON.parse(text);
         setData(json);
-        setFilterTypes(json.stats.types['repo'] ? new Set(['repo']) : new Set(Object.keys(json.stats.types)));
+        setFilterTypes(new Set(Object.keys(json.stats.types)));
         setFilterClusters(new Set());
         setSelectedNode(null);
         setSearchQuery('');
@@ -208,7 +211,7 @@ export default function GraphVizApp() {
       <div className="top-bar">
         <h1>📊  GraphViz</h1>
         <span className="stats">
-          {filteredCount}/{totalCount} nodes · {filteredEdges.length} edges · {data.stats.total_clusters} groups
+          {filteredCount}/{totalCount} nodes · {filteredEdges.length} edges · {data.stats.total_clusters} clusters
         </span>
         <button className="btn" onClick={() => setPanelOpen(o => !o)} style={{ minWidth: 36 }}>
           {panelOpen ? '☰' : '☰'}
@@ -281,17 +284,25 @@ export default function GraphVizApp() {
             </div>
 
             <div className="filter-section">
-              <h3>Filter by type</h3>
+              <h3>🧭 Domains</h3>
               <div className="filter-tags">
-                {availableTypes.map(({ type, count }) => (
-                  <span key={type}
-                    className={`filter-tag ${filterTypes.has(type) ? 'active' : 'inactive'}`}
-                    style={{ background: (TYPE_COLORS[type] || TYPE_DEFAULT) + '22', color: TYPE_COLORS[type] || TYPE_DEFAULT }}
-                    onClick={() => toggleType(type)}>
-                    {type} ({count})
-                  </span>
-                ))}
+                {DOMAIN_ORDER.filter(d => availableTypes.find(t => t.type === d)).map((type) => {
+                  const info = availableTypes.find(t => t.type === type);
+                  if (!info) return null;
+                  return (
+                    <span key={type}
+                      className={`filter-tag ${filterTypes.has(type) ? 'active' : 'inactive'}`}
+                      style={{ background: (TYPE_COLORS[type] || TYPE_DEFAULT) + '22', color: TYPE_COLORS[type] || TYPE_DEFAULT }}
+                      onClick={() => toggleType(type)}>
+                      {TYPE_DOMAIN_NAMES[type] || type} ({info.count})
+                    </span>
+                  );
+                })}
               </div>
+              {filterTypes.size < Object.keys(data.stats.types).length && (
+                <button className="btn" onClick={() => setFilterTypes(new Set(Object.keys(data.stats.types)))}
+                  style={{ width: '100%', marginTop: 8, justifyContent: 'center', fontSize: 11 }}>Show all</button>
+              )}
             </div>
 
             {availableClusters.length > 0 && (
@@ -314,18 +325,18 @@ export default function GraphVizApp() {
               </div>
             )}
 
-            {filterClusters.size > 0 || !(filterTypes.size === 1 && filterTypes.has('repo')) ? (
+            {filterTypes.size < Object.keys(data.stats.types).length || filterClusters.size > 0 || collapsedClusters.size > 0 ? (
               <div className="filter-section">
                 <button className="btn" onClick={resetFilters} style={{ width: '100%', justifyContent: 'center' }}>Reset all filters</button>
               </div>
             ) : null}
 
             <div className="legend">
-              <h3>Node types</h3>
-              {Object.entries(TYPE_COLORS).map(([type, color]) => (
+              <h3>🎨 Color legend</h3>
+              {Object.entries(TYPE_COLORS).filter(([type]) => data.stats.types[type]).map(([type, color]) => (
                 <div className="legend-item" key={type}>
                   <div className="legend-dot" style={{ background: color }} />
-                  <span>{type}</span>
+                  <span>{TYPE_DOMAIN_NAMES[type] || type} <span style={{ color: '#8b949e', fontSize: 11 }}>({data.stats.types[type]})</span></span>
                 </div>
               ))}
             </div>

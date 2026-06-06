@@ -1,0 +1,7 @@
+node_modules/
+.next/
+out/
+*.svg
+*.gv
+__pycache__/
+*.pyc

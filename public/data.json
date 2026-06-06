@@ -1,0 +1,230 @@
+{
+  "title": "Agent Project Graph",
+  "stats": {
+    "total_nodes": 6,
+    "total_edges": 5,
+    "total_clusters": 4,
+    "types": {
+      "repo": 6
+    },
+    "suggested_engine": "dot"
+  },
+  "nodes": [
+    {
+      "id": "repo_graph_viz",
+      "name": "graph-viz",
+      "type": "repo",
+      "subtype": "python_lib",
+      "metadata": {
+        "path": "/home/ubuntu/graph-viz",
+        "remote": "",
+        "branch": "main",
+        "commit_hash": "da72038",
+        "commit_msg": "feat: add graph-viz app - project landscape visualizer with AI classification",
+        "commit_time": "70 minutes ago",
+        "size_kb": 48,
+        "has_uncommitted": true,
+        "languages": [
+          "Python"
+        ]
+      },
+      "cluster": "Python Libraries"
+    },
+    {
+      "id": "repo_obsidian_clone",
+      "name": "obsidian-clone",
+      "type": "repo",
+      "subtype": "react",
+      "metadata": {
+        "path": "/home/ubuntu/obsidian-clone",
+        "remote": "https://github.com/AiRepositor/obsidian-clone.git",
+        "branch": "main",
+        "commit_hash": "bf235e4",
+        "commit_msg": "Drag-and-drop folders inside folders",
+        "commit_time": "2 hours ago",
+        "size_kb": 1346,
+        "has_uncommitted": false,
+        "languages": [
+          "JSON",
+          "Markdown",
+          "TypeScript"
+        ]
+      },
+      "cluster": "Web Frontends"
+    },
+    {
+      "id": "repo_nvm",
+      "name": ".nvm",
+      "type": "repo",
+      "subtype": "",
+      "metadata": {
+        "path": "/home/ubuntu/.nvm",
+        "remote": "https://github.com/nvm-sh/nvm.git",
+        "branch": "HEAD",
+        "commit_hash": "62387b8",
+        "commit_msg": "v0.40.4",
+        "commit_time": "4 months ago",
+        "size_kb": 609,
+        "has_uncommitted": false,
+        "languages": [
+          "Markdown",
+          "Shell",
+          "JSON"
+        ]
+      },
+      "cluster": "System Tools"
+    },
+    {
+      "id": "repo_car_finder",
+      "name": "car-finder",
+      "type": "repo",
+      "subtype": "nextjs",
+      "metadata": {
+        "path": "/home/ubuntu/car-finder",
+        "remote": "https://github.com/AiRepositor/car-finder.git",
+        "branch": "master",
+        "commit_hash": "b0b3707",
+        "commit_msg": "feat: add curl_cffi TLS proxy to bypass Akamai JA3/JA4 fingerprinting",
+        "commit_time": "9 days ago",
+        "size_kb": 81,
+        "has_uncommitted": false,
+        "languages": [
+          "Markdown",
+          "YAML"
+        ]
+      },
+      "cluster": "Web Frontends"
+    },
+    {
+      "id": "repo_nextjs_ai_chatbot_starter",
+      "name": "nextjs-ai-chatbot-starter",
+      "type": "repo",
+      "subtype": "nextjs",
+      "metadata": {
+        "path": "/home/ubuntu/nextjs-ai-chatbot-starter",
+        "remote": "",
+        "branch": "master",
+        "commit_hash": "e2ffc75",
+        "commit_msg": "Initial commit",
+        "commit_time": "2 days ago",
+        "size_kb": 103,
+        "has_uncommitted": false,
+        "languages": [
+          "JSON",
+          "Markdown",
+          "TypeScript"
+        ]
+      },
+      "cluster": "Web Frontends"
+    },
+    {
+      "id": "repo_hermes_agent",
+      "name": "hermes-agent",
+      "type": "repo",
+      "subtype": "agent_tool",
+      "metadata": {
+        "path": "/home/ubuntu/.hermes/hermes-agent",
+        "remote": "https://github.com/NousResearch/hermes-agent.git",
+        "branch": "main",
+        "commit_hash": "56236b16e",
+        "commit_msg": "feat(dashboard): rehaul Skills hub browser \u2014 connected hubs, featured, preview + security scan (#40384)",
+        "commit_time": "in the future",
+        "size_kb": 346242,
+        "has_uncommitted": true,
+        "languages": [
+          "Python",
+          "Markdown",
+          "YAML"
+        ]
+      },
+      "cluster": "Agent Frameworks"
+    }
+  ],
+  "edges": [
+    {
+      "source": "repo_obsidian_clone",
+      "target": "repo_nvm",
+      "kind": "same_remote",
+      "label": "github.com",
+      "color": "#9b59b6",
+      "style": "dashed",
+      "weight": 1.0
+    },
+    {
+      "source": "repo_nvm",
+      "target": "repo_car_finder",
+      "kind": "same_remote",
+      "label": "github.com",
+      "color": "#9b59b6",
+      "style": "dashed",
+      "weight": 1.0
+    },
+    {
+      "source": "repo_car_finder",
+      "target": "repo_hermes_agent",
+      "kind": "same_remote",
+      "label": "github.com",
+      "color": "#9b59b6",
+      "style": "dashed",
+      "weight": 1.0
+    },
+    {
+      "source": "repo_obsidian_clone",
+      "target": "repo_car_finder",
+      "kind": "similar",
+      "label": "Web Frontends",
+      "color": "#95a5a6",
+      "style": "dotted",
+      "weight": 1.0
+    },
+    {
+      "source": "repo_car_finder",
+      "target": "repo_nextjs_ai_chatbot_starter",
+      "kind": "similar",
+      "label": "Web Frontends",
+      "color": "#95a5a6",
+      "style": "dotted",
+      "weight": 1.0
+    }
+  ],
+  "clusters": [
+    {
+      "id": "cluster:python_libraries",
+      "name": "Python Libraries",
+      "description": "",
+      "color": "#1a1a2e",
+      "node_ids": [
+        "repo_graph_viz"
+      ]
+    },
+    {
+      "id": "cluster:web_frontends",
+      "name": "Web Frontends",
+      "description": "",
+      "color": "#16213e",
+      "node_ids": [
+        "repo_car_finder",
+        "repo_nextjs_ai_chatbot_starter",
+        "repo_obsidian_clone"
+      ]
+    },
+    {
+      "id": "cluster:system_tools",
+      "name": "System Tools",
+      "description": "",
+      "color": "#0f3460",
+      "node_ids": [
+        "repo_nvm"
+      ]
+    },
+    {
+      "id": "cluster:agent_frameworks",
+      "name": "Agent Frameworks",
+      "description": "",
+      "color": "#533483",
+      "node_ids": [
+        "repo_hermes_agent"
+      ]
+    }
+  ]
+}

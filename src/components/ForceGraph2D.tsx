@@ -551,18 +551,6 @@ export default function ForceGraph2D({ nodes, links, selectedId, collapsedCluste
       const n = hit.node;
       dragRef.current = { node: n, sx: e.clientX, sy: e.clientY, moved: false };
       n.fx = n.x; n.fy = n.y;
-      // Detect double-click
-      const now = Date.now();
-      if (now - lastClickRef.current < 350) {
-        // Double-click on node → explode/implode
-        if (explodedRef.current === n.id) {
-          callbacksRef.current.onExplodeToggle(null);
-        } else {
-          callbacksRef.current.onExplodeToggle(n.id);
-        }
-        dragRef.current.moved = true; // prevent single-click action
-      }
-      lastClickRef.current = now;
     } else if (hit?.type === 'cluster') {
       callbacksRef.current.onClusterToggle(hit.name);
     } else {
@@ -607,12 +595,28 @@ export default function ForceGraph2D({ nodes, links, selectedId, collapsedCluste
     }
   }, [getCanvasPos, hitTest]);
 
-  const onMouseUp = useCallback((e: React.MouseEvent) => {
+  const onClick = useCallback((e: React.MouseEvent) => {
+    // Single click on a non-dragged node → select
     const drag = dragRef.current;
     if (drag.node && !drag.moved && !explodedRef.current) {
-      // Single click = select (if not a double-click that was handled in onMouseDown)
       callbacksRef.current.onNodeClick(drag.node);
     }
+  }, []);
+
+  const onDoubleClick = useCallback((e: React.MouseEvent) => {
+    const pos = getCanvasPos(e.clientX, e.clientY);
+    const hit = hitTest(pos.x, pos.y);
+    if (hit?.type === 'node') {
+      if (explodedRef.current === hit.node.id) {
+        callbacksRef.current.onExplodeToggle(null);
+      } else {
+        callbacksRef.current.onExplodeToggle(hit.node.id);
+      }
+    }
+  }, [getCanvasPos, hitTest]);
+
+  const onMouseUp = useCallback((e: React.MouseEvent) => {
+    const drag = dragRef.current;
     if (drag.node && drag.moved) {
       setTimeout(() => { drag.node.fx = null; drag.node.fy = null; if (simRef.current) simRef.current.alpha(0.1); }, 300);
     }
@@ -656,7 +660,8 @@ export default function ForceGraph2D({ nodes, links, selectedId, collapsedCluste
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       <canvas ref={canvasRef}
-        onMouseDown={onMouseDown} onMouseMove={onMouseMove}
+        onMouseDown={onMouseDown} onClick={onClick} onDoubleClick={onDoubleClick}
+        onMouseMove={onMouseMove}
         onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
         onWheel={onWheel} onContextMenu={onContext}
         style={{ display: 'block', cursor: 'grab', width: '100%', height: '100%' }}
